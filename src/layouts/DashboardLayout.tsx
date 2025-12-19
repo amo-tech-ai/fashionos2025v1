@@ -1,16 +1,18 @@
 
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Folder, Settings, LogOut, Sparkles, Wand2, ClipboardList, Camera, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Folder, Settings, LogOut, Sparkles, Wand2, ClipboardList, Camera, Menu, X, Mic, Users2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { logout } from '@/lib/auth';
 import { AIAgent } from '@/components/ai/AIAgent';
+import { LiveConsole } from '@/components/dashboard/LiveConsole';
 import { cn } from '@/lib/utils';
 
 export const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLiveConsoleOpen, setIsLiveConsoleOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -24,11 +26,14 @@ export const DashboardLayout: React.FC = () => {
     { icon: Folder, label: 'Collections', path: '/dashboard/projects' },
     { icon: ClipboardList, label: 'Tasks', path: '/dashboard/tasks' },
     { icon: Camera, label: 'Runway', path: '/dashboard/events' },
+    { icon: Users2, label: 'Relationships', path: '/dashboard/crm' },
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];
 
   return (
     <div className="min-h-screen flex bg-[#fafafa] font-sans">
+      <LiveConsole isOpen={isLiveConsoleOpen} onClose={() => setIsLiveConsoleOpen(false)} />
+
       {/* Mobile Trigger */}
       <button 
         onClick={() => setIsMobileMenuOpen(true)}
@@ -69,6 +74,17 @@ export const DashboardLayout: React.FC = () => {
               </Button>
             </Link>
           ))}
+          
+          <div className="pt-8 px-2">
+             <Button 
+               onClick={() => setIsLiveConsoleOpen(true)}
+               variant="primary" 
+               className="w-full justify-start gap-3 rounded-none h-14 shadow-lg group"
+             >
+                <Mic className="h-4 w-4 group-hover:animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Live Assist</span>
+             </Button>
+          </div>
         </nav>
         <div className="p-4 border-t">
           <Button variant="outline" className="w-full justify-start gap-3 rounded-none h-12" onClick={handleLogout}>

@@ -46,40 +46,40 @@ export const WorkDrawer: React.FC<WorkDrawerProps> = ({
       )}
       
       <div className={cn(
-        "fixed top-0 right-0 h-full w-full md:w-[360px] bg-white z-[70] border-l border-border transform transition-transform duration-300 ease-in-out",
+        "fixed top-0 right-0 h-full w-full md:w-[420px] bg-white z-[70] border-l border-border transform transition-transform duration-300 ease-in-out shadow-2xl",
         isOpen ? "translate-x-0" : "translate-x-full"
       )}>
         <div className="flex flex-col h-full">
-          <div className="h-16 flex items-center justify-between px-8 border-b border-border/50">
+          <div className="h-16 flex items-center justify-between px-8 border-b border-border/50 bg-muted/5">
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
-              {mode === 'summary' ? 'Workflow Summary' : mode === 'guest-detail' ? 'Guest Credentials' : 'Task Specification'}
+              {mode === 'summary' ? 'Workflow Metrics' : mode === 'guest-detail' ? 'Guest Intel' : 'Execution Details'}
             </span>
-            <button onClick={onClose} className="p-2 -mr-2 hover:bg-muted/50 transition-colors">
-              <X className="h-4 w-4 text-muted-foreground" />
+            <button onClick={onClose} className="p-2 -mr-2 hover:rotate-90 transition-all text-muted-foreground hover:text-primary">
+              <X className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-8 py-10">
+          <div className="flex-1 overflow-y-auto px-8 py-10 scrollbar-none">
             {mode === 'summary' && <SummaryDetails metrics={metrics} />}
-            {mode === 'detail' && currentTask && <TaskDetails task={currentTask} />}
-            {mode === 'guest-detail' && currentGuest && <GuestDetails guest={currentGuest} />}
+            {mode === 'detail' && currentTask && <TaskDetails key={currentTask.id} task={currentTask} />}
+            {mode === 'guest-detail' && currentGuest && <GuestDetails key={currentGuest.id} guest={currentGuest} />}
           </div>
 
           {(mode === 'detail' || mode === 'guest-detail') && (
-            <div className="p-8 border-t border-border bg-white sticky bottom-0 grid grid-cols-2 gap-3">
-              <Button onClick={handleAction} className="w-full rounded-none h-12 text-[10px] uppercase font-black tracking-widest">
+            <div className="p-8 border-t border-border bg-white sticky bottom-0 grid grid-cols-2 gap-4">
+              <Button onClick={handleAction} className="w-full rounded-none h-14 text-[10px] uppercase font-black tracking-widest shadow-xl">
                 {mode === 'guest-detail' ? (
                   <>
                     <UserCheck className="h-4 w-4 mr-2" /> Check In
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="h-4 w-4 mr-2" /> Complete
+                    <CheckCircle2 className="h-4 w-4 mr-2" /> Mark Complete
                   </>
                 )}
               </Button>
-              <Button variant="outline" className="w-full rounded-none h-12 text-[10px] uppercase font-black tracking-widest">
-                {mode === 'guest-detail' ? 'Update Seat' : 'Reassign'}
+              <Button variant="outline" className="w-full rounded-none h-14 text-[10px] uppercase font-black tracking-widest border-primary/10">
+                {mode === 'guest-detail' ? 'Modify Seating' : 'Delegate'}
               </Button>
             </div>
           )}

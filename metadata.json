@@ -1,5 +1,9 @@
 {
   "name": "fashionOS",
   "description": "A premium fashion intelligence platform inspired by luxury editorial design, built with React, Vite, and Tailwind.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
 }

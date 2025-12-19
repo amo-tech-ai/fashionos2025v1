@@ -16,6 +16,7 @@ import { Intelligence } from '@/pages/dashboard/Intelligence';
 import { Studio } from '@/pages/dashboard/Studio';
 import { Tasks } from '@/pages/dashboard/Tasks';
 import { EventHub } from '@/pages/dashboard/EventHub';
+import { CRM } from '@/pages/dashboard/CRM';
 import { NotFound } from '@/pages/error/NotFound';
 
 export const router = createBrowserRouter([
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
           { path: 'projects/:id', element: <ProjectDetail /> },
           { path: 'tasks', element: <Tasks /> },
           { path: 'events', element: <EventHub /> },
+          { path: 'crm', element: <CRM /> },
           { path: 'settings', element: <Settings /> },
         ],
       },

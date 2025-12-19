@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { AlertCircle, CheckCircle2, Sparkles, Loader2, ListChecks } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Sparkles, Loader2, ListChecks, RefreshCw, Landmark, Shield, BrainCircuit } from 'lucide-react';
 import { Task } from '@/types/dashboard';
 import { AIInsight } from './AIInsight';
 import { generateTaskInsight } from '@/lib/gemini';
@@ -13,17 +13,16 @@ interface TaskDetailsProps {
 }
 
 export const TaskDetails: React.FC<TaskDetailsProps> = ({ task }) => {
-  const { toggleSubtask } = useDashboardStore();
-  const [insight, setInsight] = useState<string | undefined>(task.aiInsight);
+  const { toggleSubtask, updateTask } = useDashboardStore();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerateInsight = async () => {
     setIsGenerating(true);
     try {
       const result = await generateTaskInsight(task);
-      setInsight(result);
+      updateTask(task.id, { aiInsight: result });
     } catch (error) {
-      console.error(error);
+      console.error("Insight generation failed", error);
     } finally {
       setIsGenerating(false);
     }
@@ -34,7 +33,7 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task }) => {
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 pb-10 animate-in fade-in duration-500">
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
           <span>{task.phase}</span>
@@ -48,6 +47,21 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task }) => {
         <h2 className="font-serif text-3xl leading-tight">
           {task.title}
         </h2>
+      </div>
+
+      <div className="grid grid-cols-2 gap-px bg-border border border-border shadow-sm">
+         <div className="bg-white p-4 space-y-1">
+            <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-muted-foreground">
+               <Shield className="h-3 w-3" /> Priority
+            </div>
+            <p className="text-[10px] font-black uppercase text-primary">{task.priority || 'Medium'}</p>
+         </div>
+         <div className="bg-white p-4 space-y-1">
+            <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-muted-foreground">
+               <Landmark className="h-3 w-3" /> Cost Center
+            </div>
+            <p className="text-[10px] font-black uppercase text-primary">{task.costCenter || 'GLOBAL-OS'}</p>
+         </div>
       </div>
 
       <div className="space-y-4">
@@ -76,14 +90,52 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task }) => {
       )}
 
       <div className="space-y-2">
-        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Description</h4>
+        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Strategic Description</h4>
         <p className="text-sm text-foreground/80 leading-relaxed font-medium">
-          {task.description}
+          {task.description || "No description provided for this deliverable."}
         </p>
       </div>
 
-      <div className="space-y-6">
-        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Checklist</h4>
+      <div className="space-y-4 pt-4 border-t border-dashed">
+        <div className="flex items-center justify-between">
+           <div className="flex items-center gap-2">
+             <BrainCircuit className="h-3.5 w-3.5 text-primary" />
+             <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Strategic Insight</h4>
+           </div>
+           {task.aiInsight && (
+             <button 
+               onClick={handleGenerateInsight}
+               disabled={isGenerating}
+               className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-2"
+             >
+               {isGenerating ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <RefreshCw className="h-2.5 w-2.5" />}
+               Regenerate
+             </button>
+           )}
+        </div>
+
+        {task.aiInsight ? (
+           <AIInsight text={task.aiInsight} />
+        ) : (
+          <div className="p-6 bg-muted/5 border border-dashed border-border/50 space-y-4">
+            <p className="text-[10px] text-muted-foreground italic leading-relaxed">
+              Generate an autonomous execution plan for this deliverable based on current market context.
+            </p>
+            <Button 
+              variant="outline" 
+              className="w-full h-10 text-[9px] uppercase font-black tracking-widest rounded-none border-primary/10 hover:bg-primary/5"
+              onClick={handleGenerateInsight}
+              disabled={isGenerating}
+            >
+              {isGenerating ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <Sparkles className="h-3 w-3 mr-2" />}
+              Synthesize Strategy
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-6 pt-4 border-t border-dashed">
+        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Execution Checklist</h4>
         <div className="space-y-2">
           {task.subtasks.map(sub => (
             <div 
@@ -106,7 +158,7 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task }) => {
             </div>
           ))}
           {task.subtasks.length === 0 && (
-            <p className="text-xs italic text-muted-foreground">No defined subtasks.</p>
+            <p className="text-xs italic text-muted-foreground">No subtasks defined.</p>
           )}
         </div>
       </div>
@@ -120,50 +172,6 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({ task }) => {
           <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Owner</span>
           <p className="text-xs font-bold uppercase tracking-tighter">{task.owner}</p>
         </div>
-      </div>
-
-      <div className="space-y-4 pb-10">
-        {insight ? (
-          <AIInsight text={insight} />
-        ) : (
-          <div className="p-6 border border-dashed border-border/50 bg-muted/5 space-y-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-3 w-3 text-muted-foreground/40" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Strategic Analysis Available</span>
-            </div>
-            <p className="text-[10px] text-muted-foreground italic leading-relaxed">
-              Synthesize task context to generate an autonomous execution strategy.
-            </p>
-            <Button 
-              variant="outline" 
-              className="w-full h-10 text-[9px] uppercase font-black tracking-widest rounded-none border-primary/10 hover:bg-primary/5 transition-all"
-              onClick={handleGenerateInsight}
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                  Orchestrating
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3 w-3 mr-2" />
-                  Generate Strategy
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-        
-        {insight && !isGenerating && (
-          <button 
-            onClick={handleGenerateInsight}
-            className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-2 ml-auto"
-          >
-            <Sparkles className="h-2 w-2" />
-            Recalibrate Insight
-          </button>
-        )}
       </div>
     </div>
   );

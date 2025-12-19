@@ -7,6 +7,7 @@ const INITIAL_TASKS: Task[] = [
     id: 't1', title: 'Textile Surface Analysis', status: 'at-risk', phase: 'Sourcing',
     description: 'Finalize microscopic analysis of bio-silk samples.',
     blocking: 'Pattern Development', dueDate: 'Oct 24, 2024', owner: 'R. Simmons',
+    priority: 'high', costCenter: 'R&D-01',
     subtasks: [
       { id: 'st1', label: 'Tension testing', completed: true },
       { id: 'st2', label: 'Colorfast validation', completed: false },
@@ -17,6 +18,7 @@ const INITIAL_TASKS: Task[] = [
     id: 't2', title: 'Runway Lighting Grid', status: 'pending', phase: 'Production',
     description: 'Coordinate with lighting director to finalize the Lux-950 grid layout.',
     dueDate: 'Nov 02, 2024', owner: 'L. Chen',
+    priority: 'medium', costCenter: 'EVT-PROD',
     subtasks: [
       { id: 'st4', label: 'Shadow angle simulation', completed: false },
       { id: 'st5', label: 'DMX patching verification', completed: false }
@@ -37,8 +39,10 @@ interface DashboardContextType {
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   toggleSubtask: (taskId: string, subtaskId: string) => void;
   addTask: (task: Omit<Task, 'id'>) => void;
+  addTasksBulk: (newTasks: Partial<Task>[]) => void;
   checkInGuest: (guestId: string) => void;
   saveAsset: (asset: Omit<Asset, 'id'>) => void;
+  deleteAsset: (assetId: string) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -58,18 +62,30 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       const updatedSubtasks = task.subtasks.map(sub => 
         sub.id === subtaskId ? { ...sub, completed: !sub.completed } : sub
       );
-      
-      // Auto-update task status if all subtasks are completed
       const allDone = updatedSubtasks.every(s => s.completed);
       const newStatus = allDone ? 'completed' : task.status === 'completed' ? 'pending' : task.status;
-
       return { ...task, subtasks: updatedSubtasks, status: newStatus as any };
     }));
   }, []);
 
   const addTask = useCallback((task: Omit<Task, 'id'>) => {
-    const newTask = { ...task, id: `t-${Date.now()}` };
+    const newTask = { ...task, id: `t-${Date.now()}` } as Task;
     setTasks(prev => [newTask, ...prev]);
+  }, []);
+
+  const addTasksBulk = useCallback((newTasks: Partial<Task>[]) => {
+    const tasksWithIds = newTasks.map((t, idx) => ({
+      status: 'pending',
+      description: '',
+      dueDate: 'TBD',
+      owner: 'Unassigned',
+      subtasks: [],
+      priority: 'medium',
+      costCenter: 'GLOBAL-OS',
+      ...t,
+      id: `t-bulk-${Date.now()}-${idx}`
+    })) as Task[];
+    setTasks(prev => [...tasksWithIds, ...prev]);
   }, []);
 
   const checkInGuest = useCallback((guestId: string) => {
@@ -77,8 +93,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveAsset = useCallback((asset: Omit<Asset, 'id'>) => {
-    const newAsset = { ...asset, id: `a-${Date.now()}` };
+    const newAsset = { ...asset, id: `a-${Date.now()}` } as Asset;
     setAssets(prev => [newAsset, ...prev]);
+  }, []);
+
+  const deleteAsset = useCallback((assetId: string) => {
+    setAssets(prev => prev.filter(a => a.id !== assetId));
   }, []);
 
   const metrics: WorkflowMetrics = {
@@ -86,6 +106,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     pending: tasks.filter(t => t.status === 'pending').length,
     completed: tasks.filter(t => t.status === 'completed').length,
     atRisk: tasks.filter(t => t.status === 'at-risk').length,
+    budgetUtilization: 68.4,
   };
 
   const value = {
@@ -96,8 +117,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     updateTask,
     toggleSubtask,
     addTask,
+    addTasksBulk,
     checkInGuest,
-    saveAsset
+    saveAsset,
+    deleteAsset
   };
 
   return React.createElement(DashboardContext.Provider, { value }, children);
